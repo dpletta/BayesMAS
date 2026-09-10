@@ -1,0 +1,87 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "bayesmas"
+version = "0.1.0"
+description = "Empirical Bayes multi-agent collaboration: sufficient-statistic pooling, posterior-stability stopping, and Byzantine filtering"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+authors = [{ name = "David Pletta" }]
+keywords = [
+  "multi-agent",
+  "empirical-bayes",
+  "partial-pooling",
+  "opinion-dynamics",
+  "ai-safety",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering",
+]
+dependencies = [
+  "numpy>=2.2,<3",
+]
+
+[project.optional-dependencies]
+plot = ["matplotlib>=3.10,<4"]
+
+[project.scripts]
+bayesmas = "bayesmas.cli:main"
+
+[project.urls]
+Repository = "https://github.com/dpletta/BayesMAS"
+
+[dependency-groups]
+dev = [
+  "pytest>=8,<10",
+  "pytest-cov>=6,<8",
+  "ruff>=0.11,<1",
+  "mypy>=1.15,<2",
+]
+
+[tool.uv]
+managed = true
+package = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/bayesmas"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "S"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+"scripts/**" = ["S101"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["bayesmas"]
+
+[tool.mypy]
+python_version = "3.12"
+files = ["src"]
+strict = true
+warn_unused_ignores = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers --strict-config"
+markers = [
+  "slow: longer Monte Carlo or BFS sweeps; kept in CI but easy to skip locally",
+]
+filterwarnings = ["error"]
+
+[tool.coverage.run]
+source = ["src/bayesmas"]
+branch = true
