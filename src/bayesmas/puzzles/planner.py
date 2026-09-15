@@ -20,10 +20,22 @@ from bayesmas.puzzles.blocks import BlocksWorld
 from bayesmas.puzzles.checkers import CheckerJumping
 from bayesmas.puzzles.hanoi import TowerOfHanoi
 from bayesmas.puzzles.river import RiverCrossing
-from bayesmas.puzzles.solve import shortest_length
+from bayesmas.puzzles.solve import bfs_distance, shortest_length
 from bayesmas.types import ProtocolName
 
 Factory = Callable[[int], Puzzle]
+
+# Remaining-length assigned to a state from which the goal is unreachable.
+# Large enough to dominate any real distance in these small puzzles, so a move
+# that deadlocks the puzzle is scored as the worst possible option.
+UNSOLVABLE_REMAIN = 1e6
+
+
+def _remaining_length(state: Puzzle) -> float:
+    """Distance to the goal, or ``UNSOLVABLE_REMAIN`` for deadlocked states."""
+    dist = bfs_distance(state)
+    return float(dist) if dist is not None else UNSOLVABLE_REMAIN
+
 
 PUZZLE_FACTORIES: dict[str, Factory] = {
     "hanoi": TowerOfHanoi.start,
@@ -119,12 +131,14 @@ def run_puzzle_trial(
         moves = state.legal_moves()
         if not moves:
             break
-        remain = np.array([shortest_length(state.apply(move)) for move in moves], dtype=np.float64)
+        remain = np.array(
+            [_remaining_length(state.apply(move)) for move in moves], dtype=np.float64
+        )
         quality = -remain
         scores = np.zeros((n_agents, len(moves)), dtype=np.float64)
         sigma2 = np.empty(n_agents, dtype=np.float64)
         y_scalar = np.empty(n_agents, dtype=np.float64)
-        true_remain = float(shortest_length(state))
+        true_remain = _remaining_length(state)
 
         for i in range(n_honest):
             jitter = 0.0 if noise == 0.0 else rng.normal(0.0, noise, size=len(moves))

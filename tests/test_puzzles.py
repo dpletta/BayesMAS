@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from bayesmas.puzzles import BlocksWorld, CheckerJumping, RiverCrossing, TowerOfHanoi
-from bayesmas.puzzles.solve import shortest_length
+from bayesmas.puzzles.solve import bfs_distance, shortest_length
 
 
 def test_hanoi_start_is_unsolved_and_goal_is_solved() -> None:
@@ -72,6 +72,17 @@ def test_blocks_start_is_not_the_goal_and_optimal_is_positive() -> None:
     assert start.goal().is_solved() is True
     assert shortest_length(start) > 0
     assert start.legal_moves()
+
+
+def test_checkers_deadlock_is_unreachable_not_an_error() -> None:
+    # EMPTY, RED, RED, BLUE, BLUE: reds cannot move right nor jump, blues
+    # cannot move left nor jump -- a legal-but-deadlocked state.
+    deadlock = CheckerJumping(cells=(0, 1, 1, -1, -1), n=2)
+    assert deadlock.is_solved() is False
+    assert deadlock.legal_moves() == ()
+    assert bfs_distance(deadlock) is None
+    with pytest.raises(RuntimeError, match="no solution"):
+        shortest_length(deadlock)
 
 
 def test_puzzle_registry_covers_the_four_apple_environments() -> None:
