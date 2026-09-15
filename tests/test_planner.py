@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from bayesmas.puzzles.planner import run_puzzle_trial
+from bayesmas.puzzles.planner import run_puzzle_sweep, run_puzzle_trial
 from bayesmas.puzzles.solve import shortest_length
 from bayesmas.types import ProtocolName
 
@@ -51,3 +51,16 @@ def test_optimal_steps_match_the_solver() -> None:
     )
     assert result.optimal_steps == shortest_length(TowerOfHanoi.start(2))
     assert result.solved is True
+
+
+def test_checkers_sweep_survives_deadlocked_successor_states() -> None:
+    # Noisy/Byzantine planners can steer checker jumping into deadlocked
+    # states whose successors are unsolvable; scoring must not raise.
+    rows = run_puzzle_sweep(
+        puzzles=("checkers",),
+        sizes=(2,),
+        trials=5,
+        seed=0,
+    )
+    assert rows
+    assert all(row["puzzle"] == "checkers" for row in rows)
