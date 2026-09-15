@@ -1,0 +1,4 @@
+{
+  "name": "BayesMAS",
+  "install": "curl -LsSf https://astral.sh/uv/install.sh | sh && \"$HOME/.local/bin/uv\" python pin 3.12 && \"$HOME/.local/bin/uv\" sync --locked --all-groups"
+}
